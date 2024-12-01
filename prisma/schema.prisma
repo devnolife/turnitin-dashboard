@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  instruktur
+  mahasiswa
+}
+
+enum Status {
+  aktif
+  nonaktif
+  lulus
+}
+
+model users {
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username      String  @db.VarChar(50) @unique
+  password      String  @db.VarChar(100)
+  no_whatsapp   String  @db.VarChar(15)
+  profile       profile?
+  role          Role
+  instruktur_id String? @db.Uuid
+  instruktur    users?  @relation("InstrukturRelation", fields: [instruktur_id], references: [id])
+  mahasiswa     users[] @relation("InstrukturRelation")
+}
+
+model profile {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama      String  @db.VarChar(100)
+  user_id   String  @unique @db.Uuid
+  users     users   @relation(fields: [user_id], references: [id])
+  prodi     prodi?
+}
+
+model prodi {
+  id         Int     @id @default(autoincrement())
+  prodi      String  @db.VarChar(50)
+  profile_id String  @unique @db.Uuid
+  fakultas_id Int
+  fakultas    fakultas @relation(fields: [fakultas_id], references: [id])
+  profile    profile @relation(fields: [profile_id], references: [id])
+}
+
+model fakultas {
+  id         Int     @id @default(autoincrement())
+  fakultas   String  @db.VarChar(50)
+  prodi_id   Int     @unique
+  prodi      prodi[]
+
+}
+
